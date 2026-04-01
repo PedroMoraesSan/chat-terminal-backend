@@ -3,7 +3,7 @@ name = "pyback"
 version = "0.1.0"
 description = "FastAPI Clean Architecture backend (Neon PostgreSQL) for Chat Terminal"
 readme = "README.md"
-authors = ["Pedro Moraes <https://github.com/PedroMoraesSan>"]
+authors = ["Pedro Moraes <pedromoraes@users.noreply.github.com>"]
 license = "MIT"
 packages = [{ include = "pyback", from = "src" }]
 
