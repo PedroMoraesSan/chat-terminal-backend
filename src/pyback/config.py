@@ -2,6 +2,7 @@ import ssl
 from functools import lru_cache
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from pydantic import AliasChoices, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -70,10 +71,28 @@ def _asyncpg_url_and_connect_args(async_url: str) -> tuple[str, dict]:
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+        env_ignore_empty=True,
+    )
 
-    database_url: str
-    jwt_secret: str
+    database_url: str = Field(
+        ...,
+        validation_alias=AliasChoices(
+            "DATABASE_URL",
+            "database_url",
+            "NEON_DATABASE_URL",
+            "POSTGRES_URL",
+            "PGURL",
+        ),
+    )
+    jwt_secret: str = Field(
+        ...,
+        validation_alias=AliasChoices("JWT_SECRET", "jwt_secret"),
+    )
     encryption_key: str = ""
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     api_public_base_url: str = "http://127.0.0.1:8000"
@@ -107,6 +126,20 @@ class Settings(BaseSettings):
         return u
 
 
+def _load_settings() -> Settings:
+    try:
+        return Settings()
+    except ValidationError as e:
+        raise RuntimeError(
+            "Variáveis de ambiente obrigatórias ausentes ou inválidas.\n"
+            "No Railway: abra o serviço → Variables e defina pelo menos:\n"
+            "  • DATABASE_URL (string do Postgres/Neon; ou referencie a variável do plugin Postgres)\n"
+            "  • JWT_SECRET (string longa e secreta)\n"
+            "Também aceitos: NEON_DATABASE_URL, POSTGRES_URL ou PGURL no lugar de DATABASE_URL.\n"
+            f"Detalhe: {e}"
+        ) from e
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return _load_settings()
