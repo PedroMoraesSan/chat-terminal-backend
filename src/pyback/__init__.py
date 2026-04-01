@@ -1,0 +1,1 @@
+"""Chat Terminal FastAPI backend."""
