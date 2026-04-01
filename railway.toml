@@ -1,0 +1,14 @@
+# Railway: crie um serviço com Root Directory = pyback (ou conecte só esta pasta no repo).
+# Variáveis: DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY, CORS_ORIGINS, API_PUBLIC_BASE_URL (veja .env.example).
+
+[build]
+builder = "nixpacks"
+buildCommand = "poetry install --no-interaction --without dev"
+
+[deploy]
+startCommand = "poetry run uvicorn pyback.presentation.main:app --host 0.0.0.0 --port $PORT"
+releaseCommand = "poetry run alembic upgrade head"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
